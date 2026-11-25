@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portfolio Lab Specialist Bundle v1",
+  "type": "object",
+  "required": ["schema_version", "system", "primary_expert", "experts", "native_execution", "code_sha256", "source_inputs", "data_end", "artifacts", "authority", "automatic_promotion_allowed"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "system": {"type": "string"},
+    "primary_expert": {"type": "string"},
+    "data_end": {"type": "string", "format": "date"},
+    "code_sha256": {"type": "string"},
+    "native_execution": {"type": "string"},
+    "source_inputs": {"type": "array"},
+    "authority": {"const": "research_only"},
+    "automatic_promotion_allowed": {"const": false},
+    "artifacts": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+    "experts": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "weights_file", "evaluation_start", "role", "evidence_status", "target_semantics"],
+        "properties": {
+          "id": {"type": "string"},
+          "weights_file": {"type": "string"},
+          "evaluation_start": {"type": "string", "format": "date"},
+          "role": {"enum": ["primary", "challenger", "comparator", "rejected_diagnostic"]},
+          "evidence_status": {"const": "retrospective_research"},
+          "target_semantics": {"const": "close_known_risky_budgets"}
+        }
+      }
+    }
+  }
+}

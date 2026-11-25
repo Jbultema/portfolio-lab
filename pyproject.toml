@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "portfolio-lab"
+version = "0.1.0"
+description = "Point-in-time specialist comparison and research-only portfolio allocation"
+requires-python = ">=3.12"
+dependencies = ["numpy>=1.26,<2", "pandas>=2.2,<3", "pyarrow>=17,<22", "plotly>=5.24,<6", "streamlit>=1.40,<2", "exchange-calendars>=4.11,<5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.9,<1", "playwright>=1.49,<2"]
+
+[project.scripts]
+portfolio-lab = "portfolio_lab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
