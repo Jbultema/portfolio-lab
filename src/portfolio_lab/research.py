@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from portfolio_lab.allocation import Policy, allocate, consolidate, followups, policies, regimes
-from portfolio_lab.contracts import digest, json_hash, load_panel
+from portfolio_lab.contracts import digest, load_panel
 from portfolio_lab.engine import Result, metrics, replay
 
 PERIODS = {
@@ -135,19 +135,20 @@ def overlap_evidence(results: dict[str, Result], spy_returns: pd.Series) -> pd.D
 
 
 def run(paths: list[Path], output: Path) -> Path:
-    source_root = Path(__file__).parent
-    initial_source_hash = json_hash(
-        {str(p.relative_to(source_root)): digest(p) for p in sorted(source_root.rglob("*.py"))}
-    )
+    from portfolio_lab.governance import policy_hash
+
+    initial_source_hash = policy_hash()
     output.mkdir(parents=True, exist_ok=False)
     prices, targets, cash, metadata = load_panel(paths)
-    if {b["system"] for b in metadata["bundles"]} != {
+    core = {
         "trade-bot",
         "swing-trader",
         "rotation-trader",
-    }:
+    }
+    systems = {b["system"] for b in metadata["bundles"]}
+    if not core <= systems or systems - core - {"fundamental-event-trader"}:
         raise ValueError(
-            "Only the three integrated specialists are admitted; a new specialist needs an explicit qualification review"
+            "The three core specialists are required; only the qualified event specialist may be added"
         )
     states = regimes(prices)
     states.to_csv(output / "market_state.csv", index_label="date")
@@ -156,7 +157,7 @@ def run(paths: list[Path], output: Path) -> Path:
     registry = []
 
     def evaluate(name, family, target):
-        result = replay(prices, target, cash)
+        result = replay(prices, target, cash, terminal_events=metadata["terminal_events"])
         results[name], target_book[name] = result, target
         rows.extend(measure(name, family, result))
         return result
@@ -301,7 +302,7 @@ def run(paths: list[Path], output: Path) -> Path:
                 "embargo_sessions": 21,
             }
         )
-    wf_result = replay(prices, wf, cash)
+    wf_result = replay(prices, wf, cash, terminal_events=metadata["terminal_events"])
     wf_result.returns = wf_result.returns.where(wf_result.returns.index >= "2019-01-01")
     results["annual_walk_forward"] = wf_result
     target_book["annual_walk_forward"] = wf
@@ -361,7 +362,7 @@ def run(paths: list[Path], output: Path) -> Path:
     stress_rows = []
     for name in dict.fromkeys([selected, "trade_primary", "equal_blend", "child_challenger_blend"]):
         for lag, cost in ((1, 10), (2, 10), (4, 10), (1, 25), (2, 50)):
-            r = replay(prices, target_book[name], cash, lag=lag, cost_bps=cost)
+            r = replay(prices, target_book[name], cash, lag=lag, cost_bps=cost, terminal_events=metadata["terminal_events"])
             stress_rows.append(
                 {
                     "candidate": name,
@@ -393,19 +394,14 @@ def run(paths: list[Path], output: Path) -> Path:
         "authority": "research_only",
         "action": "NO ACTION",
         "automatic_promotion_allowed": False,
-        "fundamental_event_specialist": "ineligible_until_data_gates_pass",
+        "fundamental_event_specialist": "qualified_comparative_research_only" if "fundamental-event-trader" in systems else "not_admitted_no_qualified_bundle",
         "technology_measure": "conservative instrument-level proxy; overlapping ETFs not constituent lookthrough",
     }
     (output / "current_state.json").write_text(json.dumps(newest, indent=2, sort_keys=True) + "\n")
     report = render_report(pd.DataFrame(rows), selection, metadata, scale, intervals)
     report += f"\nAllocator-family PBO diagnostic: {pbo['probability_selected_path_below_test_median']:.1%}, {pbo['distinct_paths']} distinct paths from {pbo['registered_paths']} specifications. Prior trial history is incomplete; this is not promotion evidence.\n"
     (output / "report.md").write_text(report)
-    code_hash = json_hash(
-        {
-            str(p.relative_to(Path(__file__).parent)): digest(p)
-            for p in sorted(Path(__file__).parent.rglob("*.py"))
-        }
-    )
+    code_hash = policy_hash()
     if code_hash != initial_source_hash:
         raise RuntimeError(
             "Source changed during the research run; outputs are incomplete and cannot be shadowed"
@@ -423,6 +419,7 @@ def run(paths: list[Path], output: Path) -> Path:
         "execution": "close-known targets; next-session close fill; holdings drift; 10bps on risky traded notional; costs funded from NAV",
         "metadata": metadata,
         "policy_source_sha256": code_hash,
+        "policy_source_scope": "financial_policy_v1",
         "selection": selection,
         "risk_match_development_scale": scale,
         "risk_match_method": "development_realized_volatility_ratio_approximate_not_exact_after_rescaling_costs",

@@ -99,3 +99,28 @@ def test_corrupt_existing_shadow_cannot_be_silently_replaced(tmp_path):
     path.write_text(json.dumps(record))
     with pytest.raises(ContractError, match="immutable"):
         record_shadow(root, tmp_path / "journal", now=NOW)
+
+
+def test_financial_policy_boundary_includes_accounting_but_not_commentary(monkeypatch):
+    import portfolio_lab.governance as governance
+
+    baseline = governance.policy_hash()
+    original = governance.digest
+    monkeypatch.setattr(governance, "digest", lambda p: "changed" if p.name == "brief_agent.py" else original(p))
+    assert governance.policy_hash() == baseline
+    monkeypatch.setattr(governance, "digest", lambda p: "changed" if p.name == "audit.py" else original(p))
+    assert governance.policy_hash() != baseline
+
+
+def test_explicit_financial_scope_validates_and_unknown_scope_fails(tmp_path):
+    from portfolio_lab.governance import policy_hash
+
+    root = report(tmp_path / "report")
+    path = root / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest.update(policy_source_scope="financial_policy_v1", policy_source_sha256=policy_hash())
+    path.write_text(json.dumps(manifest))
+    assert not audit(root, now=NOW)["errors"]
+    manifest["policy_source_scope"] = "ignore_integrity"
+    path.write_text(json.dumps(manifest))
+    assert audit(root, now=NOW)["errors"]

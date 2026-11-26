@@ -24,6 +24,7 @@ def replay(
     *,
     lag: int = 1,
     cost_bps: float = 10.0,
+    terminal_events: list[dict] | None = None,
 ) -> Result:
     """Close t targets fill close t+lag; P&L starts strictly after that fill.
 
@@ -40,6 +41,9 @@ def replay(
         raise ContractError("Invalid execution lag or costs")
     frame_check(prices)
     frame_check(targets, weights=True)
+    from portfolio_lab.corporate_actions import terminal_records
+
+    terminals = terminal_records(terminal_events, prices.columns, prices.index)
     if not targets.index.equals(prices.index) or not set(targets) <= set(prices):
         raise ContractError("Execution inputs must align")
     cash = cash_returns.reindex(prices.index).to_numpy(float)
@@ -54,15 +58,31 @@ def replay(
     for i in range(len(p)):
         prior_nav = nav
         if i:
+            cash_value *= 1.0 + cash[i]
+            for j, instrument in enumerate(targets.columns):
+                if instrument in terminals and terminals[instrument][0] == prices.index[i] and held[j] > 1e-12:
+                    if not np.isfinite(p[i - 1, j]) or p[i - 1, j] <= 0:
+                        raise ContractError("Terminal settlement lacks a previous adjusted share price")
+                    cash_value += held[j] / p[i - 1, j] * terminals[instrument][1]
+                    held[j] = 0.
             valid = np.isfinite(p[i]) & np.isfinite(p[i - 1]) & (p[i - 1] > 0)
             if np.any((held > 1e-12) & ~valid):
                 raise ContractError(f"Unpriced holding on {prices.index[i]}")
             growth = np.ones(p.shape[1])
             np.divide(p[i], p[i - 1], out=growth, where=valid)
             held *= growth
-            cash_value *= 1.0 + cash[i]
         pre = held.sum() + cash_value
-        target = desired[i]
+        if pre == 0:
+            rows.append(np.zeros_like(held))
+            returns.append(-1. if prior_nav > 0 else 0.)
+            turnover.append(0.)
+            fees.append(0.)
+            nav = 0.
+            continue
+        target = desired[i].copy()
+        for j, instrument in enumerate(targets.columns):
+            if instrument in terminals and terminals[instrument][0] <= prices.index[i]:
+                target[j] = 0.
         traded = fee = 0.0
         if not np.allclose(target, prior_target, rtol=0, atol=1e-12):
             if np.any(((target > 1e-12) | (held > 1e-12)) & ~np.isfinite(p[i])):

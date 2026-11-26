@@ -12,8 +12,7 @@ from plotly.subplots import make_subplots
 from portfolio_lab.audit import audit
 
 
-def main():
-    st.set_page_config(page_title="Portfolio Lab", layout="wide")
+def research_view():
     st.title("Portfolio Lab")
     pointer = Path("reports/latest.json")
     default = os.environ.get("PORTFOLIO_LAB_REPORT")
@@ -122,6 +121,32 @@ def main():
         st.download_button(
             "Research Report", (report / "report.md").read_text(), file_name="portfolio-research.md"
         )
+
+
+def main():
+    st.set_page_config(page_title="Market Desk | Portfolio Lab", layout="wide", page_icon=":material/monitoring:")
+    if st.query_params.get("workspace") == "adaptive" or os.environ.get("PORTFOLIO_LAB_ADAPTIVE"):
+        from portfolio_lab.dynamic_ui import render
+
+        render(os.getenv("PORTFOLIO_LAB_ADAPTIVE", "reports/adaptive-allocation/latest.json"))
+        return
+    if st.query_params.get("workspace") == "dynamic" or os.environ.get("PORTFOLIO_LAB_DYNAMIC"):
+        from portfolio_lab.dynamic_ui import render
+
+        render()
+        return
+    if st.query_params.get("workspace") == "combination" or os.environ.get("PORTFOLIO_LAB_STRESS"):
+        from portfolio_lab.combination_ui import render
+
+        render()
+        return
+    pointer = Path("reports/market-desk/latest.json")
+    if os.environ.get("PORTFOLIO_LAB_DESK") or (pointer.exists() and not os.environ.get("PORTFOLIO_LAB_REPORT")):
+        from portfolio_lab.desk_ui import render
+
+        render(research_view)
+    else:
+        research_view()
 
 
 if __name__ == "__main__":

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -15,10 +17,23 @@ REPOSITORIES = (
 )
 
 
+def source_fingerprint(root: Path) -> str:
+    result = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--",
+        "src", "tests", "scripts", "config", "configs", "contracts", ".github", "pyproject.toml", "poetry.lock", "requirements.lock"],
+        cwd=root, capture_output=True, check=True)
+    rows = {}
+    for name in sorted(set(result.stdout.decode().split("\0")) - {""}):
+        path = root / name
+        if path.is_symlink():
+            raise ValueError("Executable source cannot be a symlink")
+        rows[name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "deleted"
+    return hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
+
+
 def command(root: Path, args: list[str], *, timeout: int = 900) -> dict:
     try:
         result = subprocess.run(
-            args, cwd=root, text=True, capture_output=True, timeout=timeout, check=False
+            args, cwd=root, env=os.environ | {"PYTHONPATH": str(root / "src")}, text=True, capture_output=True, timeout=timeout, check=False
         )
         return {
             "command": args, "exit_code": result.returncode,
@@ -46,6 +61,7 @@ def verify(root: Path, output: Path) -> dict:
     }
     for name in REPOSITORIES:
         repo = root / name
+        before = source_fingerprint(repo)
         python = str(repo / ".venv/bin/python")
         checks = {}
         for key, args in (
@@ -61,9 +77,11 @@ def verify(root: Path, output: Path) -> dict:
         junit = output / (name + ".xml")
         counts = junit_counts(junit) if junit.exists() else {}
         clean = not checks["worktree"].get("stdout", "").strip()
-        passed = all(checks[k]["exit_code"] == 0 for k in checks)
+        after = source_fingerprint(repo)
+        passed = all(checks[k]["exit_code"] == 0 for k in checks) and before == after and counts.get("skipped", 1) == 0
         item = {"checks": checks, "test_counts": counts, "worktree_clean": clean,
-                "local_checks_passed": passed}
+                "local_checks_passed": passed, "source_fingerprint": after,
+                "source_unchanged_during_checks": before == after}
         report["repositories"][name] = item
         print(f"{name}: {'PASS' if passed else 'FAIL'}, {counts}, clean={clean}", flush=True)
         (output / "verification.json").write_text(json.dumps(report, indent=2) + "\n")

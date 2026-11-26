@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -57,6 +57,7 @@ class Bundle:
     prices: pd.DataFrame
     targets: dict[str, pd.DataFrame]
     cash_returns: pd.Series
+    terminal_events: list[dict] = field(default_factory=list)
 
 
 def load_bundle(path: Path) -> Bundle:
@@ -132,7 +133,28 @@ def load_bundle(path: Path) -> Bundle:
         raise ContractError("Exactly one primary role must match the declared primary")
     if not targets or str(prices.index.max().date()) != manifest["data_end"]:
         raise ContractError("Missing experts or incorrect data endpoint")
-    return Bundle(path, manifest, prices, targets, cash)
+    terminals = []
+    if "terminal_events.json" in manifest["artifacts"]:
+        from portfolio_lab.corporate_actions import terminal_records
+
+        terminals = json.loads((path / "terminal_events.json").read_text())
+        terminal_records(terminals, prices.columns, prices.index)
+    if manifest["system"] == "fundamental-event-trader":
+        if not {"qualification.json", "terminal_events.json"} <= manifest["artifacts"].keys():
+            raise ContractError("Event specialist requires data/research and terminal evidence")
+        admission = json.loads((path / "qualification.json").read_text())
+        if (not isinstance(manifest["source_inputs"], dict)
+                or admission.get("qualified_real_dataset") is not True
+                or admission.get("native_research_audit") != "passed_research_integrity"
+                or admission.get("fixture_only") is not False
+                or admission.get("data_kind") != "real_historical"
+                or admission.get("portfolio_allocation_allowed") is not False
+                or admission.get("automatic_promotion_allowed") is not False
+                or admission.get("code_sha256") != manifest["code_sha256"]
+                or admission.get("dataset_manifest_sha256") != manifest["source_inputs"].get("dataset_manifest")
+                or admission.get("research_manifest_sha256") != manifest["source_inputs"].get("research_manifest")):
+            raise ContractError("Event specialist has not passed comparative research admission")
+    return Bundle(path, manifest, prices, targets, cash, terminals)
 
 
 def load_panel(paths: list[Path]) -> tuple[pd.DataFrame, dict[str, pd.DataFrame], pd.Series, dict]:
@@ -204,5 +226,25 @@ def load_panel(paths: list[Path]) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]
         "bundle_sha256": [digest(b.root / "manifest.json") for b in bundles],
         "common_start": str(index.min().date()),
         "common_end": str(index.max().date()),
+        "terminal_events": [],
     }
+    terminal_by_security = {}
+    for bundle in bundles:
+        for record in bundle.terminal_events:
+            if record["security_id"] not in instruments or pd.Timestamp(record["settlement_session"]) not in index:
+                continue
+            security = record["security_id"]
+            chosen_system = next(row["system"] for row in source_rows if row["ticker"] == security)
+            if chosen_system != bundle.manifest["system"]:
+                prior = index.get_loc(pd.Timestamp(record["settlement_session"])) - 1
+                if prior < 0:
+                    raise ContractError("Terminal cash has no common pre-settlement price basis")
+                owner_price = bundle.prices.loc[index[prior], security]
+                chosen_price = price_columns[security].loc[index[prior]]
+                if not np.isfinite(owner_price) or not np.isclose(owner_price, chosen_price, rtol=1e-8, atol=1e-10):
+                    raise ContractError("Terminal cash and selected price source use different adjusted-share units")
+            if security in terminal_by_security and terminal_by_security[security] != record:
+                raise ContractError("Conflicting cross-specialist terminal cash evidence")
+            terminal_by_security[security] = record
+    meta["terminal_events"] = list(terminal_by_security.values())
     return prices, targets, cash, meta

@@ -41,9 +41,17 @@ def audit(output: Path, *, now: datetime | None = None) -> dict:
         if current.get("action") != "NO ACTION":
             errors.append("unexpected_action_authority")
         code_root = Path(__file__).parent
-        actual_code = json_hash(
-            {str(p.relative_to(code_root)): digest(p) for p in sorted(code_root.rglob("*.py"))}
-        )
+        scope = manifest.get("policy_source_scope", "legacy_full_source")
+        if scope == "financial_policy_v1":
+            from portfolio_lab.governance import policy_hash
+
+            actual_code = policy_hash()
+        elif scope == "legacy_full_source":
+            actual_code = json_hash(
+                {str(p.relative_to(code_root)): digest(p) for p in sorted(code_root.rglob("*.py"))}
+            )
+        else:
+            raise ContractError("Unknown policy source boundary")
         if actual_code != manifest["policy_source_sha256"]:
             errors.append("source_code_changed_since_research")
         for name, expected in manifest.get("environment", {}).items():
@@ -116,7 +124,7 @@ def record_shadow(output: Path, journal_root: Path, *, now: datetime | None = No
     return path
 
 
-def evaluate_shadow(journal: Path, prices, cash_returns) -> dict:
+def evaluate_shadow(journal: Path, prices, cash_returns, *, terminal_events=None) -> dict:
     import exchange_calendars as xcals
     import pandas as pd
 
@@ -185,7 +193,7 @@ def evaluate_shadow(journal: Path, prices, cash_returns) -> dict:
         # but the target was captured before the modeled execution close.
         for ticker, value in record["signal"]["target_holdings"].items():
             weights.loc[weights.index[position - 1 : stop - 1], ticker] = value
-    result = replay(prices, weights, cash_returns)
+    result = replay(prices, weights, cash_returns, terminal_events=terminal_events)
     first = entries[0][0]
     observed = result.returns.iloc[first:]
     return {
