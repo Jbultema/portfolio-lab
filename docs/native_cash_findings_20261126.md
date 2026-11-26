@@ -76,3 +76,12 @@ Qualified new information and frozen prospective evidence remain the real gates.
 - The native protocol, all specifications, source hashes, costs and every path
   are retained. Funded returns, uncertainty and crisis omissions are downloadable
   artifacts, not rounded narrative-only results.
+
+## Corrected-Schedule Rebaseline
+
+Cycle 4 corrected planned weekly/monthly reviews and sealed all native sources
+and dependency versions. The same slate was rerun, not counted as new trials.
+The unchanged primary remains 17.59%/-26.57%; explicit repair 126 is now
+15.81%/-27.82%. Conclusions do not change. Latest evidence is Trade Bot
+`cycle4_native_rebaseline` and Portfolio Lab `cycle4_common_rebaseline` under
+their `reports/system_cycles_20261126` directories.

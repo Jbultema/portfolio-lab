@@ -29,7 +29,8 @@ def capture_local_bundles(repos_root: Path, destination: Path) -> tuple[list[Pat
         output = (destination / name).resolve()
         try:
             subprocess.run([str(root / ".venv/bin/python"), "-m", module, "--output", str(output)],
-                           cwd=root, check=True, timeout=240, capture_output=True, text=True)
+                           cwd=root, env=os.environ | {"PYTHONPATH": str((root / "src").resolve())},
+                           check=True, timeout=240, capture_output=True, text=True)
             paths.append(output)
             health[name] = {"status": "captured"}
         except (OSError, subprocess.SubprocessError) as exc:

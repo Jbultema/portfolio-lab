@@ -1,6 +1,12 @@
 import pytest
 
-from portfolio_lab.system_inventory import SYSTEMS, personal_remote, validate_identity, write_report
+from portfolio_lab.system_inventory import (
+    SYSTEMS,
+    personal_remote,
+    redact_credentials,
+    validate_identity,
+    write_report,
+)
 
 
 @pytest.mark.parametrize("name", SYSTEMS)
@@ -39,3 +45,13 @@ def test_missing_primary_cannot_be_reported_as_consistent():
     with pytest.raises(ValueError):
         validate_identity({"schema_version": 1, "system": "trade-bot", "primary": None,
             "configuration_consistent": True, "action_authorized": False, "portfolio_allocation_allowed": False}, "trade-bot")
+
+
+def test_inventory_never_writes_an_https_remote_credential():
+    value = "origin https://user:private-secret@github.com/Jbultema/trade-bot.git (push)"
+    safe = redact_credentials(value)
+    assert "private-secret" not in safe
+    assert "user:" not in safe
+    assert "[redacted]@github.com" in safe
+    assert not personal_remote(safe.split()[1], "trade-bot")
+    assert "private-secret" not in redact_credentials("https://github.com/repo?token=private-secret")

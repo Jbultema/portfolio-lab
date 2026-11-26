@@ -42,3 +42,14 @@ def test_raw_market_data_is_not_published_as_source(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "git", lambda *args: "data/private-account.json")
     with pytest.raises(ValueError, match="Protected non-source"):
         module.changed_sources(tmp_path)
+
+
+def test_ignored_executable_cannot_evade_tested_source_fingerprint(tmp_path):
+    import subprocess
+
+    subprocess.run(["git", "init", str(tmp_path)], check=True, capture_output=True)
+    (tmp_path / "src").mkdir()
+    (tmp_path / ".gitignore").write_text("src/hidden.py\n")
+    (tmp_path / "src/hidden.py").write_text("value = 1\n")
+    with pytest.raises(ValueError, match="Ignored executable"):
+        load("verify_workspace").source_fingerprint(tmp_path)

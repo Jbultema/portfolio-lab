@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -113,7 +114,8 @@ def collect_telemetry(paths: list[Path], repos_root: Path, destination: Path) ->
             subprocess.run([
                 str(root / ".venv/bin/python"), "-m", modules[name],
                 "--bundle", str(path.resolve()), "--output", str((destination / name).resolve()),
-            ], cwd=root, check=True, timeout=240, capture_output=True, text=True)
+            ], cwd=root, env=os.environ | {"PYTHONPATH": str((root / "src").resolve())},
+                check=True, timeout=240, capture_output=True, text=True)
             usable.append(path)
             health[name] = {"status": "captured"}
         except (OSError, subprocess.SubprocessError) as exc:

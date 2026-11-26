@@ -16,7 +16,7 @@ Existing unrelated work, historical captures and raw data must be preserved.
 | 1 | Canonical native identities; personal-repository release audit; source checkpoint | Passed locally; clean personal-SSH checkpoints; PR auth pending |
 | 2 | Rotation execution conformance; survivorship and data-qualification audit | Passed locally; clean personal-SSH checkpoint scheduled; PR auth pending |
 | 3 | Native cash-risk sizing; predeclared controls, costs, delays and historical study | Passed locally; source checkpoint scheduled; no strategy promotion |
-| 4 | Orthogonal-mechanism duplicate audit; prospective evidence and source gates | Pending |
+| 4 | Orthogonal-mechanism duplicate audit; prospective evidence and source gates | Passed locally; clean source checkpoint scheduled; no new allocation authority |
 | 5 | Forecast accountability; dashboard integration; final regression and release survey | Pending |
 
 ## Initial Audit
@@ -76,3 +76,29 @@ Full results and limitations: `native_cash_findings_20261126.md`.
 Complete QA: 790/212/63/267/284 tests, 1,616 passed, zero failures, errors or
 skips. Lint, dependencies and whitespace passed. Evidence:
 `reports/system_cycles_20261126/cycle3_qa/verification.json`.
+
+## Cycle 4 Evidence
+
+Actual specialist replay confirms moderate economic co-exposure despite little
+or no direct ticker overlap. Explicit data, incremental-benefit and prospective
+gates prevent correlation alone from qualifying a new specialist. Audit and
+ownership: `specialist_evidence_20261126.md`.
+
+Corrective survey fixed an incomplete-week/month scheduling defect, pinned a
+proven exchange calendar, bound all native capture subprocesses to their own
+source, redacted credential-bearing inventory URLs, and made ignored executable
+source a release failure. Existing historical archives remain immutable.
+
+Same 24-rule slate rebaselined under corrected scheduling: 180 native plus 192
+common-clock paths, not new hypothesis trials. Baseline remains 17.59%/-26.57%
+on the common primary case; explicit repair 126 is now 15.81%/-27.82%. Still no
+slate-adjusted positive improvement. Evidence: `cycle4_native_rebaseline` in
+Trade Bot and `cycle4_common_rebaseline` in Portfolio Lab system-cycle reports.
+
+Complete QA: 793/212/63/274/284 tests, 1,626 passed, no failures/errors/skips.
+Dependencies, lint, whitespace and source fingerprints passed. Evidence:
+`reports/system_cycles_20261126/cycle4_qa/verification.json`.
+
+Fresh review desk independently captured all three native providers and verified
+40 reconstructed sessions from October 1 to November 25. The running desk's
+publication pointer was not replaced.

@@ -18,6 +18,12 @@ REPOSITORIES = (
 
 
 def source_fingerprint(root: Path) -> str:
+    ignored = subprocess.run(["git", "ls-files", "--others", "--ignored", "--exclude-standard", "-z", "--",
+        "src", "tests", "scripts", "config", "configs", "contracts", ".github"],
+        cwd=root, capture_output=True, check=True)
+    if any(Path(name).suffix in {".py", ".sh", ".json", ".toml", ".yaml", ".yml"}
+           for name in ignored.stdout.decode().split("\0") if name):
+        raise ValueError("Ignored executable or configuration source cannot be released")
     result = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--",
         "src", "tests", "scripts", "config", "configs", "contracts", ".github", "pyproject.toml", "poetry.lock", "requirements.lock"],
         cwd=root, capture_output=True, check=True)

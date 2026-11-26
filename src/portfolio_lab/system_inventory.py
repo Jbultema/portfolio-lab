@@ -9,15 +9,32 @@ import re
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 SYSTEMS = ("trade-bot", "swing-trader", "rotation-trader", "portfolio-lab", "fundamental-event-trader")
 MODULES = {n: n.replace("-", "_") for n in SYSTEMS}
 
 
+def redact_credentials(value):
+    def clean(match):
+        try:
+            url = urlsplit(match.group())
+            if url.username is not None or url.password is not None:
+                host = url.hostname or "invalid"
+                host += f":{url.port}" if url.port else ""
+                return urlunsplit((url.scheme, "[redacted]@" + host, url.path, "", ""))
+            if url.query or url.fragment:
+                return urlunsplit((url.scheme, url.netloc, url.path, "[redacted]" if url.query else "", ""))
+            return match.group()
+        except ValueError:
+            return "[redacted-invalid-url]"
+    return re.sub(r"https?://[^\s]+", clean, value)
+
+
 def command(root, args, timeout=60):
     try:
         result = subprocess.run(args, cwd=root, env=os.environ | {"PYTHONPATH": str(root / "src")}, text=True, capture_output=True, timeout=timeout, check=False)
-        return {"exit_code": result.returncode, "stdout": result.stdout.strip(), "stderr": result.stderr[-2000:].strip()}
+        return {"exit_code": result.returncode, "stdout": redact_credentials(result.stdout.strip()), "stderr": redact_credentials(result.stderr[-2000:].strip())}
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"exit_code": -1, "stdout": "", "error": type(exc).__name__}
 

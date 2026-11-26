@@ -2,6 +2,7 @@
 
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
@@ -100,7 +101,8 @@ def fingerprint(payload):
 def current_fingerprint(root):
     try:
         result = subprocess.run([str(root / ".venv/bin/python"), "-m", "fundamental_event_trader.cli", "status"],
-                                cwd=root, capture_output=True, text=True, timeout=120)
+                                cwd=root, env=os.environ | {"PYTHONPATH": str((root / "src").resolve())},
+                                capture_output=True, text=True, timeout=120)
         if result.returncode not in (0, 2):
             raise ContractError("qualification_check_failed")
         payload = validate_context(json.loads(result.stdout))
@@ -150,7 +152,8 @@ def capture(root: Path, *, destination: Path | None = None) -> dict:
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
     output = root / "reports/daily" / stamp
     result = subprocess.run([str(interpreter), "-m", "fundamental_event_trader.cli", "daily", "--output", str(output.resolve()), "--refresh-news"],
-                            cwd=root, capture_output=True, text=True, timeout=240)
+                            cwd=root, env=os.environ | {"PYTHONPATH": str((root / "src").resolve())},
+                            capture_output=True, text=True, timeout=240)
     if result.returncode not in (0, 2):
         raise ContractError("Event specialist status command failed")
     meta = json.loads((output / "manifest.json").read_text())

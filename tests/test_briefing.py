@@ -398,6 +398,7 @@ def test_failed_provider_is_not_substituted_as_cash(tmp_path, monkeypatch):
     from portfolio_lab.brief_runner import capture_local_bundles
 
     def execute(args, **kwargs):
+        assert kwargs["env"]["PYTHONPATH"] == str((kwargs["cwd"] / "src").resolve())
         if "swing_trader.portfolio_export" in args:
             raise OSError("simulated unavailable local provider")
 
