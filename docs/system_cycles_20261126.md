@@ -15,7 +15,7 @@ Existing unrelated work, historical captures and raw data must be preserved.
 |---|---|---|
 | 1 | Canonical native identities; personal-repository release audit; source checkpoint | Passed locally; clean personal-SSH checkpoints; PR auth pending |
 | 2 | Rotation execution conformance; survivorship and data-qualification audit | Passed locally; clean personal-SSH checkpoint scheduled; PR auth pending |
-| 3 | Native cash-risk sizing; predeclared controls, costs, delays and historical study | Pending |
+| 3 | Native cash-risk sizing; predeclared controls, costs, delays and historical study | Passed locally; source checkpoint scheduled; no strategy promotion |
 | 4 | Orthogonal-mechanism duplicate audit; prospective evidence and source gates | Pending |
 | 5 | Forecast accountability; dashboard integration; final regression and release survey | Pending |
 
@@ -63,3 +63,16 @@ defect. Both were corrected. Complete corrective QA: 780/212/63/264/284 tests,
 `reports/system_cycles_20261126/cycle2_qa_corrective/verification.json`.
 Final accounting source receipt:
 Rotation `reports/system_cycles_20261126/cycle2_execution_corrective`.
+
+## Cycle 3 Evidence
+
+Implemented and registered native staged-risk selection/sizing with causal
+market/credit/participation confirmation, explicit repair and unavailable-data
+failure. Preregistered retained-versus-replaced guard ablations test whether
+layering the old guard explains persistent defense. Tested 180 native and 192
+funded common-clock paths, including unchanged parents and static controls.
+No new staged rule earns a slate-adjusted improvement; no primary change.
+Full results and limitations: `native_cash_findings_20261126.md`.
+Complete QA: 790/212/63/267/284 tests, 1,616 passed, zero failures, errors or
+skips. Lint, dependencies and whitespace passed. Evidence:
+`reports/system_cycles_20261126/cycle3_qa/verification.json`.
