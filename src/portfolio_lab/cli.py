@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -27,6 +28,7 @@ def export_all(repos_root: Path, destination: Path) -> list[Path]:
         subprocess.run(
             [str(interpreter), "-m", module, "--output", str(output)],
             cwd=root,
+            env=os.environ | {"PYTHONPATH": str((root / "src").resolve())},
             check=True,
             timeout=240,
         )
@@ -35,7 +37,8 @@ def export_all(repos_root: Path, destination: Path) -> list[Path]:
     if (event_root / "data/runtime.json").is_file():
         output = (destination / stamp / "fundamental-event-trader").resolve()
         subprocess.run([str(event_root / ".venv/bin/python"), "-m", "fundamental_event_trader.portfolio_export", "--output", str(output)],
-                       cwd=event_root, check=True, timeout=240)
+                       cwd=event_root, env=os.environ | {"PYTHONPATH": str((event_root / "src").resolve())},
+                       check=True, timeout=240)
         paths.append(output)
     return paths
 

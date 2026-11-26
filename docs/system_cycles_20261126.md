@@ -13,8 +13,8 @@ Existing unrelated work, historical captures and raw data must be preserved.
 
 | Cycle | Scope | State |
 |---|---|---|
-| 1 | Canonical native identities; personal-repository release audit; source checkpoint | Local QA passed; remote checkpoint pending |
-| 2 | Rotation execution conformance; survivorship and data-qualification audit | Pending |
+| 1 | Canonical native identities; personal-repository release audit; source checkpoint | Passed locally; clean personal-SSH checkpoints; PR auth pending |
+| 2 | Rotation execution conformance; survivorship and data-qualification audit | Passed locally; clean personal-SSH checkpoint scheduled; PR auth pending |
 | 3 | Native cash-risk sizing; predeclared controls, costs, delays and historical study | Pending |
 | 4 | Orthogonal-mechanism duplicate audit; prospective evidence and source gates | Pending |
 | 5 | Forecast accountability; dashboard integration; final regression and release survey | Pending |
@@ -46,3 +46,20 @@ errors or skips. Dependency, lint and whitespace checks passed. Evidence:
 `reports/system_cycles_20261126/cycle1_qa_corrective/verification.json`.
 Personal SSH is verified; personal GitHub CLI authentication is unavailable.
 PR and remote-CI acceptance remain separate, uncompleted gates.
+
+## Cycle 2 Evidence
+
+Rotation now holds drifting units, funds costs from post-fee NAV and rejects
+unpriced held intervals. Randomized tests compare an independent share-unit
+ledger with bisection-funded fees at 0/10/100bp. Prefix invariance, no free
+rebalance, missing entry and partially applied basket tests pass. Corrective
+survey also fixed cross-checkout editable-install leakage in native exports.
+Frozen accounting rebaseline ran 80 paths without reselection. Full opportunity
+set limitations and the unchanged Event gates are documented in
+`data_qualification_audit_20261126.md`. No new strategy was promoted.
+The initial full pass caught an exact-float assertion and an EOF whitespace
+defect. Both were corrected. Complete corrective QA: 780/212/63/264/284 tests,
+1,603 passed with zero failures, errors or skips. Evidence:
+`reports/system_cycles_20261126/cycle2_qa_corrective/verification.json`.
+Final accounting source receipt:
+Rotation `reports/system_cycles_20261126/cycle2_execution_corrective`.
