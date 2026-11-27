@@ -1,5 +1,9 @@
 # Position Bot And The Daily Control Room
 
+Operational update: automatic scheduling was subsequently removed at the user's
+request. Portfolio Lab now runs refreshes only on an explicit button click or
+manual CLI command. The research results below are unchanged.
+
 ## Conclusion
 
 Position Bot is implemented as an independent public-positioning research and

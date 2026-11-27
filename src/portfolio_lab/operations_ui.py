@@ -1,7 +1,6 @@
 """Local control room and native deep-dive links."""
 
 import json
-import os
 from pathlib import Path
 
 import pandas as pd
@@ -27,10 +26,6 @@ def controls():
             current = {"status": "unknown"}
         if st.button("Update all & publish", icon=":material/sync:", disabled=current is not None, width="stretch", key="global_daily_update"):
             result = start(root)
-            st.session_state["daily_job_id"] = result["job_id"]
-            st.rerun()
-        if st.button("Rebuild verified local data", icon=":material/replay:", disabled=current is not None, width="stretch", key="cached_daily_update"):
-            result = start(root, refresh=False)
             st.session_state["daily_job_id"] = result["job_id"]
             st.rerun()
         if current:
@@ -108,15 +103,7 @@ def render():
     st.dataframe(pd.DataFrame([{"system": name, "daily_mode": "Public news and qualified event context" if name == "fundamental-event-trader"
                               else "Frozen-rule data refresh", "allocation_authority": "None"} for name in SYSTEMS]),
                  hide_index=True, width="stretch")
-    st.subheader("Schedule")
-    import subprocess
-
-    result = subprocess.run(["launchctl", "print", f"gui/{os.getuid()}/com.jbultema.portfolio-lab.daily"],
-                            capture_output=True, text=True, check=False) if os.uname().sysname == "Darwin" else None
-    if result and result.returncode == 0:
-        st.success("Coordinated daily scheduler is loaded. Completed-session checks run every 15 minutes while this Mac is awake.")
-    else:
-        st.warning("Coordinated daily scheduler is not loaded. The legacy report-only scheduler is a separate service.")
+    st.caption("Refresh mode: manual")
 
 
 def position_view():

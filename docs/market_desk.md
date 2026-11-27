@@ -34,20 +34,11 @@ success/failure and exception type in `reports/market-desk/jobs`. A writer lock
 prevents overlapping publications. A crash leaves the lock in place intentionally:
 verify that its PID is no longer alive before removing that one stale lock.
 
-Optional local after-close polling:
-
-```sh
-.venv/bin/python scripts/market_desk_service.py
-.venv/bin/python scripts/market_desk_service.py --emit-plist /tmp/market-desk.plist
-plutil -lint /tmp/market-desk.plist
-```
-
-The generated launchd definition polls every 15 minutes, uses actual exchange
-closes plus 15 minutes (including half-days), and skips an already-current,
-verified interpretation version. Installation is separate from generation.
-It neither wakes a sleeping computer nor makes stale native inputs fresh.
-Failed scheduled jobs retry on the next poll. A current archive with partial
-coverage stays explicit; rerun `brief-daily` after repairing a provider.
+Automatic polling is disabled. Use Portfolio Lab's **Update all & publish**
+button to refresh all native inputs and rebuild the report explicitly.
+The former report-only and coordinated LaunchAgents are unloaded; their
+installer/poller scripts have been removed. No data refresh starts merely by
+opening the dashboard. A current archive with partial coverage remains explicit.
 
 ## Evidence and interpretability
 

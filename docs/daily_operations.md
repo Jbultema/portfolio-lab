@@ -1,24 +1,27 @@
 # Portfolio Lab Daily Operations
 
 Portfolio Lab is the single local interaction point. The sidebar exposes
-**Update all & publish**, **Rebuild verified local data**, daily job status,
+**Update all & publish**, daily job status,
 Positioning research, and native deep-dive links. Play icons start an allowlisted
 native dashboard without stopping another process. Event research remains inside
 Portfolio Lab rather than linking to a nonexistent standalone dashboard.
 
-## One Pipeline, Two Triggers
+## Manual Updates Only
 
 ```sh
 PYTHONPATH=src .venv/bin/python -m portfolio_lab.operations start
 PYTHONPATH=src .venv/bin/python -m portfolio_lab.operations run --cached
-PYTHONPATH=src .venv/bin/python scripts/daily_service.py --install
 ```
 
-The button and `com.jbultema.portfolio-lab.daily` LaunchAgent call the same
-orchestrator. It polls every 15 minutes while the Mac is awake and logged in.
+Updates run only after an explicit button click or manual CLI command. Both
+Portfolio Lab LaunchAgents were unloaded and their login definitions moved out
+of `~/Library/LaunchAgents`. Both scheduler scripts and the `tick` entrypoint
+were removed. Opening the dashboard does not launch a data refresh.
+
+The local Portfolio Lab server is needed only while using its interface; it is
+not installed as a login service. Specialist dashboards start only on demand.
 Exchange session closes plus 15 minutes determine the expected session, including
-half-days. It catches up the latest missing daily publication; it does not invent
-prospective historical forecasts. It does not wake a sleeping Mac.
+half-days. Reports do not invent prospective historical forecasts.
 
 Repository paths and optional dashboard URLs live in ignored
 `data/operations_config.json`. The tested configuration binds the persistent
@@ -55,12 +58,10 @@ publication or a new `last_complete.json`. Event's verified `blocked` readiness
 receipt is a successful observation of a data gate, not a crashed job or a bearish
 market vote. Position Bot likewise remains outside the admitted allocator.
 
-The current-session local-data button is explicit: it never claims a network
-refresh happened. Freshness and hashes are still checked. An explicit network
+The optional `run --cached` CLI command never claims a network refresh happened.
+Freshness and hashes are still checked. An explicit network
 refresh never silently substitutes cached columns when a provider fails.
 
-The new coordinator replaces the report-only `market-desk` LaunchAgent when
-installed for operation. Run only one publication scheduler against a workspace.
 The original checkouts/WIP remain preserved; deploying a review source is not
 equivalent to merging main or accepting remote CI.
 

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from portfolio_lab.briefing import completed_sessions, interpretation_hash, verify_replay
+from portfolio_lab.briefing import completed_sessions, verify_replay
 from portfolio_lab.contracts import ContractError, digest, load_bundle
 
 SYSTEMS = ("trade-bot", "swing-trader", "rotation-trader", "fundamental-event-trader", "position-bot")
@@ -313,26 +313,14 @@ def capture_local_bundles_from_roots(repositories, destination):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["run", "start", "worker", "status", "cancel", "tick"])
+    parser.add_argument("command", choices=["run", "start", "worker", "status", "cancel"])
     parser.add_argument("--workspace", type=Path, default=Path.cwd())
     parser.add_argument("--job")
     parser.add_argument("--cached", action="store_true")
     args = parser.parse_args()
     workspace = args.workspace.resolve()
     os.chdir(workspace)
-    if args.command in {"run", "start", "tick"}:
-        if args.command == "tick":
-            complete = store(workspace) / "last_complete.json"
-            if complete.exists():
-                record = json.loads(complete.read_text())
-                if record["session"] == str(completed_sessions(1)[-1].date()):
-                    report = Path(record["report"])
-                    if digest(report / "manifest.json") != record["manifest_sha256"]:
-                        raise ContractError("Last complete publication manifest changed")
-                    manifest = verify_replay(report)
-                    if manifest["brief_code_sha256"] == interpretation_hash():
-                        print(json.dumps({"status": "already_current", "session": record["session"]}))
-                        return
+    if args.command in {"run", "start"}:
         result = start(workspace, refresh=not args.cached, launch=args.command != "run")
         if args.command == "run" and result["status"] == "queued":
             result = worker(workspace, result["job_id"])

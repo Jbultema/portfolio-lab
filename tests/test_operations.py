@@ -86,14 +86,30 @@ def test_unsafe_native_adapter_names_rejected(tmp_path):
         commands("../../evil", tmp_path, tmp_path, False, tmp_path)
 
 
-def test_schedule_uses_same_pipeline_and_pins_source():
-    import importlib.util
+def test_scheduled_tick_entrypoint_removed(monkeypatch):
+    from portfolio_lab.operations import main
 
-    file = Path(__file__).parents[1] / "scripts/daily_service.py"
-    spec = importlib.util.spec_from_file_location("daily_service", file)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    data = module.payload(Path("/example/portfolio-lab"))
-    assert data["StartInterval"] == 900
-    assert "portfolio_lab.operations" in data["ProgramArguments"]
-    assert data["EnvironmentVariables"]["PYTHONPATH"] == "/example/portfolio-lab/src"
+    monkeypatch.setattr("sys.argv", ["portfolio-lab.operations", "tick"])
+    with patch("portfolio_lab.operations.start") as launch, pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 2
+    launch.assert_not_called()
+
+
+def test_no_scheduler_installers():
+    scripts = Path(__file__).parents[1] / "scripts"
+    assert not (scripts / "daily_service.py").exists()
+    assert not (scripts / "market_desk_service.py").exists()
+
+
+def test_opening_control_room_does_not_trigger_updates(tmp_path, monkeypatch):
+    from streamlit.testing.v1 import AppTest
+
+    monkeypatch.chdir(tmp_path)
+    with patch("portfolio_lab.operations_ui.start") as launch:
+        app = AppTest.from_string("from portfolio_lab.operations_ui import controls, render\ncontrols()\nrender()")
+        app.run()
+    assert not app.exception
+    launch.assert_not_called()
+    assert [b.label for b in app.button].count("Update all & publish") == 1
+    assert "Rebuild verified local data" not in [b.label for b in app.button]
