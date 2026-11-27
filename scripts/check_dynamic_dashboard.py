@@ -8,7 +8,9 @@ from playwright.sync_api import sync_playwright
 OUTPUT = Path("reports/browser-dynamic-20261126")
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--url", default="http://[::1]:8513/?workspace=dynamic")
-URL = parser.parse_args().url
+parser.add_argument("--output", type=Path, default=OUTPUT)
+args = parser.parse_args()
+URL, OUTPUT = args.url, args.output
 
 
 def settled(page):

@@ -125,6 +125,11 @@ def research_view():
 
 def main():
     st.set_page_config(page_title="Market Desk | Portfolio Lab", layout="wide", page_icon=":material/monitoring:")
+    if st.query_params.get("workspace") == "system":
+        from portfolio_lab.system_scorecard_ui import render
+
+        render()
+        return
     if st.query_params.get("workspace") == "adaptive" or os.environ.get("PORTFOLIO_LAB_ADAPTIVE"):
         from portfolio_lab.dynamic_ui import render
 

@@ -8,7 +8,9 @@ from playwright.sync_api import sync_playwright
 OUTPUT = Path("reports/browser-adaptive-20261126")
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--url", default="http://[::1]:8514/?workspace=adaptive")
-URL = parser.parse_args().url
+parser.add_argument("--output", type=Path, default=OUTPUT)
+args = parser.parse_args()
+URL, OUTPUT = args.url, args.output
 
 
 def settled(page):
@@ -49,7 +51,8 @@ with sync_playwright() as playwright:
         page.get_by_role("tab", name="Budgets & exposure", exact=True).click()
         settled(page)
         assert page.get_by_text("Risky-asset target contributions", exact=False).count()
-        page.locator(".js-plotly-plot").last.scroll_into_view_if_needed()
+        page.locator(".js-plotly-plot:visible").last.wait_for(state="visible")
+        page.locator(".js-plotly-plot:visible").last.scroll_into_view_if_needed()
         page.screenshot(path=str(OUTPUT / f"{name}-cash-exposure.png"))
         for tab in ("Crises & execution", "Selection & evidence"):
             page.get_by_role("tab", name=tab, exact=True).click()

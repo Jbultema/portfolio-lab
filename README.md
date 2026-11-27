@@ -1,5 +1,16 @@
 # Portfolio Lab
 
+## System Review
+
+The dashboard's **System scorecard** workspace exposes native risk-rule validation,
+funded growth/drawdown paths, specialist overlap, prospective forecast evidence,
+and separately recorded release gates. Direct route: `/?workspace=system`.
+Research results do not change the operating primary or authorize trades.
+
+Five-cycle implementation evidence: [system cycles](docs/system_cycles_20261126.md).
+Native staged-risk results: [findings](docs/native_cash_findings_20261126.md).
+Forecast capture/scoring: [contract](docs/forecast_accountability.md).
+
 Market desk research quality and outstanding evidence gaps: [quality standard](docs/market_desk_quality.md).
 Report and dashboard writing: [research editorial standard](docs/research_editorial_standard.md).
 

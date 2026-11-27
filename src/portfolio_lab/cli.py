@@ -81,8 +81,33 @@ def main() -> None:
     p.add_argument("--session", required=True)
     p.add_argument("--result", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
+    p = sub.add_parser("forecast-record", help="Capture a source-bound prospective claim; never backdate")
+    p.add_argument("--claim", type=Path, required=True)
+    p.add_argument("--evidence", type=Path, required=True)
+    p.add_argument("--journal", type=Path, default=Path("data/forecasts"))
+    p = sub.add_parser("forecast-score", help="Score only matured claims against observed prices")
+    p.add_argument("--prices", type=Path, required=True)
+    p.add_argument("--manifest", type=Path, required=True)
+    p.add_argument("--journal", type=Path, default=Path("data/forecasts"))
     args = parser.parse_args()
-    if args.command == "brief-handoff":
+    if args.command == "forecast-record":
+        from portfolio_lab.forecast_accountability import record
+
+        print(record(args.journal, json.loads(args.claim.read_text()), evidence=args.evidence))
+    elif args.command == "forecast-score":
+        import pandas as pd
+
+        from portfolio_lab.combination_stress import bound
+        from portfolio_lab.contracts import digest
+        from portfolio_lab.forecast_accountability import score, summarize
+
+        metadata = json.loads(args.manifest.read_text())
+        relative = str(args.prices.resolve().relative_to(args.manifest.parent.resolve()))
+        bound(args.manifest.parent, relative, metadata["artifacts"][relative])
+        rows = score(args.journal, pd.read_parquet(args.prices))
+        print(json.dumps({"claims": rows, "series": summarize(rows), "prices_sha256": digest(args.prices),
+            "manifest_sha256": digest(args.manifest), "action_authorized": False}, indent=2))
+    elif args.command == "brief-handoff":
         from portfolio_lab.brief_agent import handoff
 
         print(json.dumps(handoff(json.loads(args.pack.read_text())), indent=2))

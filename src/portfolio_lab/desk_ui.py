@@ -71,9 +71,9 @@ def render(research_view):
     with st.sidebar:
         st.subheader("Portfolio Lab")
         st.caption("MARKET INTERPRETATION DESK")
-        view = st.radio("Workspace", ["Current read", "Macro & cross-asset", "News & events", "Signals & bots", "Event research", "Combination lab", "Dynamic allocation", "Adaptive allocation", "Replay scorecard", "Evidence", "Portfolio research"], label_visibility="collapsed")
+        view = st.radio("Workspace", ["Current read", "Macro & cross-asset", "News & events", "Signals & bots", "Event research", "System scorecard", "Combination lab", "Dynamic allocation", "Adaptive allocation", "Replay scorecard", "Evidence", "Portfolio research"], label_visibility="collapsed")
         selected = manifest["sessions"][-1]
-        if view not in {"Portfolio research", "Combination lab", "Dynamic allocation", "Adaptive allocation"}:
+        if view not in {"Portfolio research", "System scorecard", "Combination lab", "Dynamic allocation", "Adaptive allocation"}:
             selected = st.selectbox("Session close", list(reversed(manifest["sessions"])), format_func=lambda x: pd.Timestamp(x).strftime("%a, %b %d, %Y"))
         st.divider()
         st.caption(f"{summary['sessions']} completed sessions")
@@ -81,6 +81,11 @@ def render(research_view):
         st.caption("Interpretation only. Human execution only.")
     if view == "Portfolio research":
         research_view()
+        return
+    if view == "System scorecard":
+        from portfolio_lab.system_scorecard_ui import render as render_system
+
+        render_system()
         return
     if view == "Adaptive allocation":
         from portfolio_lab.dynamic_ui import render as render_adaptive

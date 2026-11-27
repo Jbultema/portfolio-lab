@@ -14,10 +14,10 @@ Existing unrelated work, historical captures and raw data must be preserved.
 | Cycle | Scope | State |
 |---|---|---|
 | 1 | Canonical native identities; personal-repository release audit; source checkpoint | Passed locally; clean personal-SSH checkpoints; PR auth pending |
-| 2 | Rotation execution conformance; survivorship and data-qualification audit | Passed locally; clean personal-SSH checkpoint scheduled; PR auth pending |
-| 3 | Native cash-risk sizing; predeclared controls, costs, delays and historical study | Passed locally; source checkpoint scheduled; no strategy promotion |
-| 4 | Orthogonal-mechanism duplicate audit; prospective evidence and source gates | Passed locally; clean source checkpoint scheduled; no new allocation authority |
-| 5 | Forecast accountability; dashboard integration; final regression and release survey | Pending |
+| 2 | Rotation execution conformance; survivorship and data-qualification audit | Local QA and personal-SSH checkpoint passed; PR auth pending |
+| 3 | Native cash-risk sizing; predeclared controls, costs, delays and historical study | Local QA and personal-SSH checkpoint passed; no strategy promotion |
+| 4 | Orthogonal-mechanism duplicate audit; prospective evidence and source gates | Local QA and personal-SSH checkpoint passed; no new allocation authority |
+| 5 | Forecast accountability; dashboard integration; final regression and release survey | Local QA and browser checks passed; PR acceptance remains incomplete |
 
 ## Initial Audit
 
@@ -102,3 +102,46 @@ Dependencies, lint, whitespace and source fingerprints passed. Evidence:
 Fresh review desk independently captured all three native providers and verified
 40 reconstructed sessions from October 1 to November 25. The running desk's
 publication pointer was not replaced.
+
+## Cycle 5 Evidence
+
+The System Scorecard presents native-rule/control comparison, funded growth and
+drawdown paths, costs/delays, specialist overlap, prospective forecasts and
+separate PR/CI gates. Forecast capture validates the exact dated fact pack and
+supporting fact IDs, archives bytes once, assigns capture time and prohibits
+backdated prospective claims. Price scoring is manifest-bound. Brier/base-rate
+scores and nonoverlapping-series counts remain uncalibrated research evidence.
+No real prospective forecasts or independent analyst pair are claimed.
+
+The corrective survey tightened price-manifest checks, fact-pack availability,
+duplicate/overlapping observation handling and unknown-versus-absent PR states.
+It also corrected an adaptive browser selector that targeted a hidden tab's chart.
+Final browser checks passed for System Scorecard, Market Desk, Combination,
+Dynamic and Adaptive workspaces on desktop and mobile: data charts, interaction,
+downloads, no horizontal overflow and no browser errors. Original evidence and
+failed diagnostic screenshots remain separate from corrective runs.
+
+Final complete QA: Trade 793, Swing 212, Rotation 63, Portfolio Lab 296, Event
+284: **1,648 passed; zero failures, errors or skips**. Dependencies, lint,
+whitespace and source fingerprints passed. Evidence:
+`reports/system_cycles_20261126/cycle5_qa/verification.json`.
+
+Persistent personal review worktrees are under
+`/Users/bultemj/repos/.worktrees/trading-five-cycles-20261126/`; compatibility
+aliases preserve earlier source receipts. Original worktrees and protected WIP
+were not reset, stashed or deleted. The isolated review server uses port 8515.
+Full system assessment and remaining research/shipping gates:
+`system_assessment_20261126.md`.
+
+| Complete local QA cycle | Tests passed | Failures / errors / skips |
+|---|---:|---|
+| 1 | 1,596 | 0 / 0 / 0 |
+| 2, corrective | 1,603 | 0 / 0 / 0 |
+| 3 | 1,616 | 0 / 0 / 0 |
+| 4 | 1,626 | 0 / 0 / 0 |
+| 5 | 1,648 | 0 / 0 / 0 |
+
+These are repeated full software passes, not independent market trials or a
+claim of thousands of distinct strategy hypotheses. Current-code accounting
+rebaselines likewise do not count as new strategy trials. Remote PR review/CI
+acceptance and untouched original-worktree cleanliness are not asserted.
