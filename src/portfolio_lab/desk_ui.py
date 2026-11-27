@@ -124,6 +124,9 @@ def render(research_view):
     if view == "Current read":
         current_read(pack, brief, facts, timeline.loc[:day], prices.loc[:day], day, root, is_current=selected == manifest["sessions"][-1])
         if selected == manifest["sessions"][-1]:
+            from portfolio_lab.position_context import render as render_position
+
+            render_position(root)
             context_path = root / "context/trade-bot/macro_context.json"
             if context_path.exists():
                 context = json.loads(context_path.read_text())
