@@ -97,7 +97,7 @@ def load_specialists(paths: list[Path], telemetry_root: Path) -> dict[str, Speci
     return output
 
 
-def collect_telemetry(paths: list[Path], repos_root: Path, destination: Path) -> list[Path]:
+def collect_telemetry(paths: list[Path], repos_root: Path, destination: Path, *, repositories=None) -> list[Path]:
     modules = {
         "trade-bot": "trade_bot.research.interpretation_export",
         "swing-trader": "swing_trader.interpretation_export",
@@ -109,7 +109,7 @@ def collect_telemetry(paths: list[Path], repos_root: Path, destination: Path) ->
         name = json.loads((path / "manifest.json").read_text())["system"]
         if name not in modules:
             raise ContractError("Unqualified telemetry provider")
-        root = repos_root / name
+        root = repositories[name] if repositories else repos_root / name
         try:
             subprocess.run([
                 str(root / ".venv/bin/python"), "-m", modules[name],
@@ -123,7 +123,7 @@ def collect_telemetry(paths: list[Path], repos_root: Path, destination: Path) ->
     (destination / "telemetry_health.json").write_text(json.dumps(health, indent=2) + "\n")
     if not usable:
         raise ContractError("No usable native telemetry")
-    fundamental = repos_root / "fundamental-event-trader"
+    fundamental = repositories["fundamental-event-trader"] if repositories else repos_root / "fundamental-event-trader"
     if (fundamental / ".venv/bin/python").is_file():
         try:
             from portfolio_lab.event_context import capture
@@ -134,6 +134,11 @@ def collect_telemetry(paths: list[Path], repos_root: Path, destination: Path) ->
 
             payload = unavailable("qualification_check_failed")
         (destination / "fundamental_event.json").write_text(json.dumps(payload, indent=2) + "\n")
+    position = repositories["position-bot"] if repositories else repos_root / "position-bot"
+    if (position / ".venv/bin/python").is_file():
+        from portfolio_lab.position_context import capture as capture_position
+
+        (destination / "position_bot.json").write_text(json.dumps(capture_position(position), indent=2) + "\n")
     return usable
 
 
@@ -546,7 +551,7 @@ def publish_replay(paths: list[Path], telemetry_root: Path, output: Path, *, cou
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, target)
             context_files.append(str(target.relative_to(output)))
-    for name in ("fundamental_event.json", "source_health.json", "telemetry_health.json"):
+    for name in ("fundamental_event.json", "position_bot.json", "source_health.json", "telemetry_health.json"):
         if (telemetry_root / name).exists():
             target = output / "context" / name
             target.parent.mkdir(exist_ok=True)
@@ -589,7 +594,13 @@ def publish_replay(paths: list[Path], telemetry_root: Path, output: Path, *, cou
         file = output / "context" / name
         if file.exists():
             note_context[key] = json.loads(file.read_text())
-    (output / "readout.md").write_text(render_readout(packs, summary, note_context))
+    readout = render_readout(packs, summary, note_context)
+    position_file = output / "context/position_bot.json"
+    if position_file.exists():
+        from portfolio_lab.position_context import section
+
+        readout += "\n" + section(json.loads(position_file.read_text())) + "\n"
+    (output / "readout.md").write_text(readout)
     if interpretation_hash() != initial_code:
         raise ContractError("Interpretation code changed during replay; archive not published")
     manifest = {"schema_version": 1, "version": BRIEF_VERSION, "created_at_utc": datetime.now(UTC).isoformat(),
@@ -606,7 +617,7 @@ def publish_replay(paths: list[Path], telemetry_root: Path, output: Path, *, cou
 
 def interpretation_hash():
     root = Path(__file__).parent
-    return json_hash({name: digest(root / name) for name in ("briefing.py", "brief_agent.py", "brief_runner.py", "desk_research.py", "editorial.py", "event_context.py")})
+    return json_hash({name: digest(root / name) for name in ("briefing.py", "brief_agent.py", "brief_runner.py", "desk_research.py", "editorial.py", "event_context.py", "position_context.py")})
 
 
 def verify_replay(root: Path) -> dict:
@@ -631,6 +642,14 @@ def verify_replay(root: Path) -> dict:
         pack = json.loads((root / "sessions" / day / "pack.json").read_text())
         validate_pack(pack, day)
     event_file = root / "context/fundamental_event.json"
+    position_file = root / "context/position_bot.json"
+    if position_file.exists():
+        from portfolio_lab.position_context import validate as validate_position
+
+        position = validate_position(json.loads(position_file.read_text()))
+        if ("context/position_bot.json" not in manifest["artifacts"]
+                or pd.Timestamp(position["captured_at_utc"]) > pd.Timestamp(manifest["created_at_utc"])):
+            raise ContractError("Unbound or future positioning capture")
     if event_file.exists():
         from portfolio_lab.event_context import read
 

@@ -125,6 +125,35 @@ def research_view():
 
 def main():
     st.set_page_config(page_title="Market Desk | Portfolio Lab", layout="wide", page_icon=":material/monitoring:")
+    st.markdown("""<style>
+    h1{font-size:2rem!important;letter-spacing:0!important}
+    h2{font-size:1.3rem!important;letter-spacing:0!important}
+    h3{font-size:1.08rem!important;letter-spacing:0!important}
+    [data-testid="stMetricValue"]{font-size:1.65rem}
+    </style>""", unsafe_allow_html=True)
+    from portfolio_lab.operations_ui import controls
+
+    controls()
+    if st.query_params.get("workspace") == "operations":
+        from portfolio_lab.operations_ui import render
+
+        render()
+        return
+    if st.query_params.get("workspace") == "position":
+        from portfolio_lab.operations_ui import position_view
+
+        position_view()
+        return
+    if st.query_params.get("workspace") == "event":
+        from portfolio_lab.briefing import verify_replay
+        from portfolio_lab.desk_ui import event_view
+
+        pointer = json.loads(Path("reports/market-desk/latest.json").read_text())
+        root = Path(pointer["report"])
+        manifest = verify_replay(root)
+        selected = manifest["sessions"][-1]
+        event_view(root, selected, selected)
+        return
     if st.query_params.get("workspace") == "system":
         from portfolio_lab.system_scorecard_ui import render
 

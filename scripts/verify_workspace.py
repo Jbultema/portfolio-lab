@@ -1,4 +1,4 @@
-"""Local verification of the five personal repos without refreshing data or trading."""
+"""Local verification of the personal repos without refreshing data or trading."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 REPOSITORIES = (
-    "trade-bot", "swing-trader", "rotation-trader", "portfolio-lab", "fundamental-event-trader"
+    "trade-bot", "swing-trader", "rotation-trader", "portfolio-lab", "fundamental-event-trader", "position-bot"
 )
 
 
@@ -67,6 +67,8 @@ def verify(root: Path, output: Path) -> dict:
     }
     for name in REPOSITORIES:
         repo = root / name
+        if name == "position-bot" and not repo.exists():
+            repo = Path.home() / "repos/position-bot"
         before = source_fingerprint(repo)
         python = str(repo / ".venv/bin/python")
         checks = {}
@@ -85,7 +87,7 @@ def verify(root: Path, output: Path) -> dict:
         clean = not checks["worktree"].get("stdout", "").strip()
         after = source_fingerprint(repo)
         passed = all(checks[k]["exit_code"] == 0 for k in checks) and before == after and counts.get("skipped", 1) == 0
-        item = {"checks": checks, "test_counts": counts, "worktree_clean": clean,
+        item = {"root": str(repo.resolve()), "checks": checks, "test_counts": counts, "worktree_clean": clean,
                 "local_checks_passed": passed, "source_fingerprint": after,
                 "source_unchanged_during_checks": before == after}
         report["repositories"][name] = item

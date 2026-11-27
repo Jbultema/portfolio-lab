@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
-SYSTEMS = ("trade-bot", "swing-trader", "rotation-trader", "portfolio-lab", "fundamental-event-trader")
+SYSTEMS = ("trade-bot", "swing-trader", "rotation-trader", "portfolio-lab", "fundamental-event-trader", "position-bot")
 MODULES = {n: n.replace("-", "_") for n in SYSTEMS}
 
 
@@ -48,7 +48,7 @@ def validate_identity(value, expected):
             or value.get("action_authorized") is not False or value.get("portfolio_allocation_allowed") is not False
             or not isinstance(value.get("configuration_consistent"), bool)):
         raise ValueError("Invalid or authorized native identity")
-    if expected == "fundamental-event-trader" and value.get("primary") is not None:
+    if expected in {"fundamental-event-trader", "position-bot"} and value.get("primary") is not None:
         raise ValueError("A broad event primary has not been admitted")
     if expected in {"trade-bot", "swing-trader", "rotation-trader"} and value["configuration_consistent"] and not value.get("primary"):
         raise ValueError("A consistent investable identity requires its actual primary")

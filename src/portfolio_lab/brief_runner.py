@@ -65,13 +65,19 @@ def run_briefs(args):
         output = args.output or reports / "runs" / stamp
         publish_replay(paths, telemetry, output, count=args.sessions)
         manifest = verify_replay(output)
+        required = getattr(args, "required_session", None)
+        if required:
+            pack = json.loads((output / "sessions" / required / "pack.json").read_text())
+            if manifest["sessions"][-1] != required or pack["fresh_specialists"] != 3:
+                raise ContractError("Daily archive is not complete for the requested session; prior publication retained")
         if manifest["brief_code_sha256"] != initial_code or interpretation_hash() != initial_code:
             raise ContractError("Interpretation code changed during capture; prior publication retained")
         pointer = {"report": str(output.resolve()), "manifest_sha256": digest(output / "manifest.json"),
                    "last_session": manifest["sessions"][-1], "published_at": datetime.now(UTC).isoformat()}
-        temporary = reports / f"latest-{stamp}.tmp"
-        temporary.write_text(json.dumps(pointer, indent=2) + "\n")
-        temporary.replace(reports / "latest.json")
+        if getattr(args, "publish", True):
+            temporary = reports / f"latest-{stamp}.tmp"
+            temporary.write_text(json.dumps(pointer, indent=2) + "\n")
+            temporary.replace(reports / "latest.json")
         log |= {"status": "completed", "report": str(output), "sessions": len(manifest["sessions"])}
         return output
     except Exception as exc:
